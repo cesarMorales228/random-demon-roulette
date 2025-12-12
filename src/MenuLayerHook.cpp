@@ -8,30 +8,46 @@ class $modify(MyMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
         
+        // Esperar un frame para asegurar que todo esté inicializado
+        this->scheduleOnce([this](float) {
+            this->addRouletteButton();
+        }, 0.0f, "add_roulette_button");
+        
+        return true;
+    }
+    
+    void addRouletteButton() {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
+        
+        // Crear sprite del botón
         auto btnSprite = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
+        if (!btnSprite) {
+            log::error("Failed to create button sprite");
+            return;
+        }
         
-        // Add "R" label
-        auto label = CCLabelBMFont::create("R", "goldFont.fnt");
-        label->setPosition(btnSprite->getContentSize() / 2);
-        label->setScale(0.8f);
-        btnSprite->addChild(label);
-        
+        // Crear el botón
         auto btn = CCMenuItemSpriteExtra::create(
             btnSprite,
             this,
             menu_selector(MyMenuLayer::onRouletteButton)
         );
-        // Position at top right or bottom right depending on preference, user said "bottom right" in prompt
-        // "winSize.width - 30, 30" corresponds to bottom right
+        
+        if (!btn) {
+            log::error("Failed to create button");
+            return;
+        }
+        
         btn->setPosition(winSize.width - 30, 30);
         
+        // Crear menú nuevo
         auto menu = CCMenu::create();
         menu->addChild(btn);
         menu->setPosition(0, 0);
-        this->addChild(menu);
+        menu->setID("roulette-menu"_spr);
+        this->addChild(menu, 10);
         
-        return true;
+        log::info("Roulette button added successfully");
     }
     
     void onRouletteButton(CCObject*) {
