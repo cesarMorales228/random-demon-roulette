@@ -8,10 +8,12 @@ class $modify(MyMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
         
-        // Esperar un frame para asegurar que todo esté inicializado
-        this->scheduleOnce([this](float) {
-            this->addRouletteButton();
-        }, 0.0f, "add_roulette_button");
+        // Usar runAction con CallFunc en vez de scheduleOnce
+        this->runAction(CCSequence::create(
+            CCDelayTime::create(0.1f),
+            CCCallFunc::create(this, callfunc_selector(MyMenuLayer::addRouletteButton)),
+            nullptr
+        ));
         
         return true;
     }
@@ -19,14 +21,12 @@ class $modify(MyMenuLayer, MenuLayer) {
     void addRouletteButton() {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         
-        // Crear sprite del botón
         auto btnSprite = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
         if (!btnSprite) {
             log::error("Failed to create button sprite");
             return;
         }
         
-        // Crear el botón
         auto btn = CCMenuItemSpriteExtra::create(
             btnSprite,
             this,
@@ -40,7 +40,6 @@ class $modify(MyMenuLayer, MenuLayer) {
         
         btn->setPosition(winSize.width - 30, 30);
         
-        // Crear menú nuevo
         auto menu = CCMenu::create();
         menu->addChild(btn);
         menu->setPosition(0, 0);
