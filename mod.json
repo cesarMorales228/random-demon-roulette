@@ -1,17 +1,12 @@
 {
-	"geode": "$GEODE_VERSION",
-	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
-	},
-	"id": "$MOD_ID",
-	"name": "$MOD_NAME",
-	"version": "$MOD_VERSION",
-	"developer": "$MOD_DEVELOPER",
-	"description": "$MOD_DESCRIPTION",
-	"dependencies": {
-		"geode.node-ids": ">=v1.20.0"
-	}
+  "geode": "4.0.0",
+  "gd": {
+    "win": "2.2074",
+    "android": "2.2074"
+  },
+  "id": "dainamondev.randomroulette",
+  "name": "Random Demon Roulette",
+  "version": "v1.0.0",
+  "developer": "dainamondev",
+  "description": "Roulette that picks random demons, tracks progress, and avoids repeats."
 }
