@@ -1,7 +1,10 @@
 #include <Geode/Geode.hpp>
+#include "RandomRouletteManager.hpp"
 
 using namespace geode::prelude;
 
 $execute {
-    log::info("Random Demon Roulette mod loaded!");
+    // Initialize manager on load
+    RandomRouletteManager::sharedState()->init();
+    log::info("Mod loaded: Random Demon Roulette");
 }
