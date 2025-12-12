@@ -9,41 +9,33 @@
 
 using namespace geode::prelude;
 
-enum class Difficulty {
-    Easy,
-    Medium,
-    Hard,
-    Extreme
-};
-
 struct DemonLevel {
     int id;
     std::string name;
-    Difficulty difficulty;
+    enum class Difficulty { Easy, Medium, Hard, Extreme } difficulty;
 };
 
 class RandomRouletteManager {
 public:
-    static RandomRouletteManager* sharedState();
+    static RandomRouletteManager* getInstance();
 
     void init();
 
     // Logic
     int pickRandomLevel();
-    void markLevelCompleted(int levelID);
-    int getBestProgress(int levelID) const;
-    void updateProgress(int levelID, int percent);
+    void markCompleted(int id);
+    void updateProgress(int id, int percent);
+    int getBestProgress(int id) const;
     void resetRoulette();
     
     // Getters
-    int getCurrentLevelID() const;
-    DemonLevel getLevelData(int levelID) const;
-    bool isCompleted(int levelID) const;
+    const DemonLevel* getCurrentLevel() const;
+    bool isCompleted(int id) const;
 
 private:
     std::vector<DemonLevel> m_demonList;
     
-    int m_currentLevelID = -1;
+    int m_currentLevelIndex = -1; // Stores ID actually
     std::map<int, int> m_levelProgress;
     std::set<int> m_completedLevels;
     

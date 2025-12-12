@@ -7,28 +7,31 @@ using namespace geode::prelude;
 class $modify(MyMenuLayer, MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
-
-        auto menu = this->getChildByID("bottom-menu");
-        if (menu) {
-            auto spr = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
-            // Add a label or icon on top if desired, or just use the button
-            // Scaling it down slightly to fit commonly packed menus
-            spr->setScale(0.7f);
-            
-            auto btn = CCMenuItemSpriteExtra::create(
-                spr,
-                this,
-                menu_selector(MyMenuLayer::onRoulette)
-            );
-            btn->setID("random-roulette-btn"_spr);
-            
-            menu->addChild(btn);
-            menu->updateLayout();
-        }
+        
+        auto winSize = CCDirector::sharedDirector()->getWinSize();
+        auto btnSprite = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
+        // Add a small "R" label to distinguish it
+        auto label = CCLabelBMFont::create("R", "goldFont.fnt");
+        label->setPosition(btnSprite->getContentSize() / 2);
+        label->setScale(0.8f);
+        btnSprite->addChild(label);
+        
+        auto btn = CCMenuItemSpriteExtra::create(
+            btnSprite,
+            this,
+            menu_selector(MyMenuLayer::onRouletteButton)
+        );
+        btn->setPosition(winSize.width - 30, 30);
+        
+        auto menu = CCMenu::create();
+        menu->addChild(btn);
+        menu->setPosition(0, 0);
+        this->addChild(menu);
+        
         return true;
     }
-
-    void onRoulette(CCObject*) {
+    
+    void onRouletteButton(CCObject*) {
         RandomRouletteLayer::create()->show();
     }
 };

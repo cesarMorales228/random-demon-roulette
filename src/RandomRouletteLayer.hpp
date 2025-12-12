@@ -7,7 +7,6 @@ class RandomRouletteLayer : public Popup<> {
 protected:
     bool setup() override;
 
-    int m_currentLevelID;
     CCLabelBMFont* m_nameLabel;
     CCLabelBMFont* m_diffLabel;
     CCLabelBMFont* m_progressLabel;
