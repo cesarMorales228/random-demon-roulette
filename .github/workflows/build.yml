@@ -22,4 +22,4 @@ jobs:
     - name: Build the mod
       uses: geode-sdk/build-geode-mod@main
       with:
-        sdk: v4.0.0
+        sdk: v4.10.0
