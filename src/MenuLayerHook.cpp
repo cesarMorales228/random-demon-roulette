@@ -10,15 +10,17 @@ class $modify(MyMenuLayer, MenuLayer) {
 
         auto menu = this->getChildByID("bottom-menu");
         if (menu) {
-            // Button Sprite
-            auto spr = ButtonSprite::create("R", 0, false, "goldFont.fnt", "GJ_button_01.png", 30.f, 0.6f);
+            auto spr = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
+            // Add a label or icon on top if desired, or just use the button
+            // Scaling it down slightly to fit commonly packed menus
+            spr->setScale(0.7f);
             
             auto btn = CCMenuItemSpriteExtra::create(
                 spr,
                 this,
                 menu_selector(MyMenuLayer::onRoulette)
             );
-            btn->setID("roulette-button"_spr);
+            btn->setID("random-roulette-btn"_spr);
             
             menu->addChild(btn);
             menu->updateLayout();

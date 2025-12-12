@@ -42,40 +42,31 @@ void RandomRouletteManager::setupDemonList() {
 void RandomRouletteManager::loadData() {
     auto mod = Mod::get();
     
-    // Load Current Level ID
-    m_currentLevelID = mod->getSavedValue<int>("current_level_id", -1);
+    m_currentLevelID = mod->getSavedValue<int>("current_level_id", -1); // fixed default -1
 
-    // Load Level Progress (JSON Object -> Map)
-    // Saved format: { "ID": Percent, ... }
+    // Map Load
     m_levelProgress.clear();
-    // Use try-catch or checks if older data might be corrupt? Geode handles basic type errors usually.
-    // We use matjson::Value to be safe.
-    if (auto val = mod->getSavedValue<matjson::Value>("level_progress")) {
-        if (val.is_object()) {
-            for (const auto& [key, value] : val.as_object()) {
-                try {
-                    int id = std::stoi(key);
-                    int percent = 0;
-                    if (value.is_number()) percent = value.as_int();
-                    m_levelProgress[id] = percent;
-                } catch(...) {}
-            }
+    auto progressVal = mod->getSavedValue<matjson::Value>("level_progress");
+    if (progressVal.has_value() && progressVal->isObject()) {
+        for (const auto& [key, val] : progressVal->asObject().unwrap()) {
+            try {
+                int id = std::stoi(key);
+                int percent = val.asInt().unwrapOr(0);
+                m_levelProgress[id] = percent;
+            } catch(...) {}
         }
     }
 
-    // Load Completed Levels (JSON Array -> Set)
+    // Set Load
     m_completedLevels.clear();
-    if (auto val = mod->getSavedValue<matjson::Value>("completed_levels")) {
-        if (val.is_array()) {
-            for (const auto& item : val.as_array()) {
-                if (item.is_number()) {
-                    m_completedLevels.insert(item.as_int());
-                }
-            }
+    auto completedVal = mod->getSavedValue<matjson::Value>("completed_levels");
+    if (completedVal.has_value() && completedVal->isArray()) {
+        for (const auto& item : completedVal->asArray().unwrap()) {
+            m_completedLevels.insert(item.asInt().unwrapOr(0));
         }
     }
 
-    log::info("Roulette Loaded: Current: {}, Completed: {}", m_currentLevelID, m_completedLevels.size());
+    log::info("RandomRoulette: Loaded (Current: {}, Completed: {})", m_currentLevelID, m_completedLevels.size());
 }
 
 void RandomRouletteManager::saveData() {
@@ -83,19 +74,19 @@ void RandomRouletteManager::saveData() {
     
     mod->setSavedValue("current_level_id", m_currentLevelID);
 
-    // Save Level Progress as JSON Object
-    matjson::Value progressObj = matjson::Object();
+    // Map -> JSON Object
+    auto progressObj = matjson::makeObject({});
     for (const auto& [id, percent] : m_levelProgress) {
         progressObj[std::to_string(id)] = percent;
     }
     mod->setSavedValue("level_progress", progressObj);
 
-    // Save Completed Levels as JSON Array
-    matjson::Value completedArr = matjson::Array();
+    // Set -> JSON Array
+    std::vector<matjson::Value> completedVec;
     for (int id : m_completedLevels) {
-        completedArr.push(id);
+        completedVec.push_back(id);
     }
-    mod->setSavedValue("completed_levels", completedArr);
+    mod->setSavedValue("completed_levels", matjson::Array(completedVec));
 }
 
 int RandomRouletteManager::pickRandomLevel() {
@@ -106,9 +97,8 @@ int RandomRouletteManager::pickRandomLevel() {
         }
     }
 
-    // If all completed
     if (candidates.empty()) {
-        log::info("All levels completed!");
+        log::info("RandomRoulette: All levels completed!");
         return -1;
     }
 
@@ -117,7 +107,7 @@ int RandomRouletteManager::pickRandomLevel() {
     m_currentLevelID = candidates[idx];
     
     saveData();
-    log::info("Picked new random level: {}", m_currentLevelID);
+    log::info("RandomRoulette: Picked level {}", m_currentLevelID);
     return m_currentLevelID;
 }
 
@@ -126,7 +116,7 @@ void RandomRouletteManager::markLevelCompleted(int levelID) {
         m_completedLevels.insert(levelID);
         m_levelProgress[levelID] = 100;
         saveData();
-        log::info("Level {} marked completed!", levelID);
+        log::info("RandomRoulette: Marked level {} as completed", levelID);
     }
 }
 
@@ -140,7 +130,7 @@ void RandomRouletteManager::updateProgress(int levelID, int percent) {
     if (percent > current) {
         m_levelProgress[levelID] = percent;
         saveData();
-        log::info("Updated progress for level {}: {}%", levelID, percent);
+        log::info("RandomRoulette: Updated progress for {} to {}%", levelID, percent);
     }
 }
 
@@ -149,7 +139,7 @@ void RandomRouletteManager::resetRoulette() {
     m_levelProgress.clear();
     m_currentLevelID = -1;
     saveData();
-    log::info("Roulette reset.");
+    log::info("RandomRoulette: Reset complete");
 }
 
 int RandomRouletteManager::getCurrentLevelID() const {
@@ -161,8 +151,8 @@ bool RandomRouletteManager::isCompleted(int levelID) const {
 }
 
 DemonLevel RandomRouletteManager::getLevelData(int levelID) const {
-    for (const auto& level : m_demonList) {
-        if (level.id == levelID) return level;
+    for (const auto& l : m_demonList) {
+        if (l.id == levelID) return l;
     }
-    return { -1, "Unknown", Difficulty::Easy };
+    return {-1, "Unknown", Difficulty::Easy};
 }

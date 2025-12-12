@@ -5,5 +5,5 @@ using namespace geode::prelude;
 
 $execute {
     RandomRouletteManager::sharedState()->init();
-    log::info("Random Demon Roulette Initialized!");
+    log::info("Random Demon Roulette Initialized (Strict Mode)");
 }
