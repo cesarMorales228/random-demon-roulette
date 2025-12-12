@@ -14,7 +14,6 @@ RandomRouletteLayer* RandomRouletteLayer::create() {
 bool RandomRouletteLayer::setup() {
     this->setTitle("Random Demon Roulette");
 
-    // Init Logic
     RandomRouletteManager::getInstance()->init();
 
     // UI Elements
@@ -69,7 +68,6 @@ void RandomRouletteLayer::updateUI() {
 
     m_nameLabel->setString(level->name.c_str());
 
-    // Difficulty Color (Green/Yellow/Orange/Red)
     ccColor3B col = {255, 255, 255};
     std::string txt = "";
     switch(level->difficulty) {
@@ -95,7 +93,7 @@ void RandomRouletteLayer::onPlay(CCObject*) {
     auto level = RandomRouletteManager::getInstance()->getCurrentLevel();
     if (!level) return;
 
-    // Correct API usage for opening level:
+    // Correct API Usage: LevelBrowserLayer with GJSearchObject Type19 (Level ID)
     auto searchObj = GJSearchObject::create(SearchType::Type19, std::to_string(level->id));
     auto scene = LevelBrowserLayer::scene(searchObj);
     CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, scene));

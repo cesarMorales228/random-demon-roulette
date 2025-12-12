@@ -35,7 +35,7 @@ public:
 private:
     std::vector<DemonLevel> m_demonList;
     
-    int m_currentLevelIndex = -1; // Stores ID actually
+    int m_currentLevelIndex = 0; // Stores ID
     std::map<int, int> m_levelProgress;
     std::set<int> m_completedLevels;
     

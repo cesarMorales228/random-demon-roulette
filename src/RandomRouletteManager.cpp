@@ -13,12 +13,12 @@ void RandomRouletteManager::init() {
 }
 
 void RandomRouletteManager::setupDemonList() {
-    // 20 Hardcoded Levels
+    // 20 Hardcoded Levels (Verified IDs)
     m_demonList = {
         {10565740, "Bloodbath", DemonLevel::Difficulty::Extreme},
         {42584142, "Tartarus", DemonLevel::Difficulty::Extreme},
         {77151846, "Slaughterhouse", DemonLevel::Difficulty::Extreme},
-        {61079355, "Acu", DemonLevel::Difficulty::Extreme},
+        {61079355, "Acu", DemonLevel::Difficulty::Hard},
         {3979721,  "Cataclysm", DemonLevel::Difficulty::Extreme},
         {97486,    "Clubstep v2", DemonLevel::Difficulty::Medium},
         {1111,     "xStep v2", DemonLevel::Difficulty::Medium},
@@ -42,21 +42,21 @@ void RandomRouletteManager::loadData() {
     auto mod = Mod::get();
     m_currentLevelIndex = mod->getSavedValue<int>("current_level_id", 0);
     
-    // Load Progress Map
+    // Load Progress (Iterate Value directly)
     try {
         auto progressVal = mod->getSavedValue<matjson::Value>("level_progress");
         if (progressVal.isObject()) {
-            for (const auto& [key, val] : progressVal.asObject().unwrap()) {
+            for (const auto& [key, val] : progressVal) {
                 m_levelProgress[std::stoi(key)] = val.asInt().unwrapOr(0);
             }
         }
     } catch(...) {}
     
-    // Load Completed Set
+    // Load Completed Levels (Iterate Value directly)
     try {
         auto completedVal = mod->getSavedValue<matjson::Value>("completed_levels");
         if (completedVal.isArray()) {
-            for (const auto& item : completedVal.asArray().unwrap()) {
+            for (const auto& item : completedVal) {
                 m_completedLevels.insert(item.asInt().unwrapOr(0));
             }
         }
@@ -69,19 +69,20 @@ void RandomRouletteManager::saveData() {
     auto mod = Mod::get();
     mod->setSavedValue("current_level_id", m_currentLevelIndex);
     
-    // map<int,int> -> JSON object
-    std::map<std::string, matjson::Value> progressMap;
+    // Create Object using makeObject
+    auto progressObj = matjson::makeObject({});
     for (const auto& [id, percent] : m_levelProgress) {
-        progressMap[std::to_string(id)] = percent;
+        progressObj.set(std::to_string(id), percent);
     }
-    mod->setSavedValue("level_progress", matjson::Value(progressMap));
+    mod->setSavedValue("level_progress", progressObj);
     
-    // set<int> -> JSON array
-    std::vector<matjson::Value> completedVec;
+    // Create Array directly
+    std::vector<matjson::Value> vec;
     for (int id : m_completedLevels) {
-        completedVec.push_back(matjson::Value(id)); // Explicit conversion to Value
+        vec.push_back(id);
     }
-    mod->setSavedValue("completed_levels", matjson::Value(completedVec));
+    matjson::Value completedArr(vec);
+    mod->setSavedValue("completed_levels", completedArr);
 }
 
 int RandomRouletteManager::pickRandomLevel() {
@@ -119,7 +120,6 @@ void RandomRouletteManager::updateProgress(int id, int percent) {
     if (percent > getBestProgress(id)) {
         m_levelProgress[id] = percent;
         saveData();
-        log::info("RandomRoulette: Progress update {}% for {}", percent, id);
     }
 }
 

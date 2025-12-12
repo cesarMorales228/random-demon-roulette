@@ -10,7 +10,8 @@ class $modify(MyMenuLayer, MenuLayer) {
         
         auto winSize = CCDirector::sharedDirector()->getWinSize();
         auto btnSprite = CCSprite::createWithSpriteFrameName("GJ_button_01.png");
-        // Add a small "R" label to distinguish it
+        
+        // Add "R" label
         auto label = CCLabelBMFont::create("R", "goldFont.fnt");
         label->setPosition(btnSprite->getContentSize() / 2);
         label->setScale(0.8f);
@@ -21,6 +22,8 @@ class $modify(MyMenuLayer, MenuLayer) {
             this,
             menu_selector(MyMenuLayer::onRouletteButton)
         );
+        // Position at top right or bottom right depending on preference, user said "bottom right" in prompt
+        // "winSize.width - 30, 30" corresponds to bottom right
         btn->setPosition(winSize.width - 30, 30);
         
         auto menu = CCMenu::create();

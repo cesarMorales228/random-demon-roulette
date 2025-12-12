@@ -1,7 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include "RandomRouletteManager.hpp"
-#include <Geode/loader/Event.hpp>
 
 using namespace geode::prelude;
 
@@ -24,9 +23,20 @@ class $modify(MyPlayLayer, PlayLayer) {
            auto mgr = RandomRouletteManager::getInstance();
            auto current = mgr->getCurrentLevel();
            if (current && m_level && m_level->m_levelID == current->id && m_level->m_levelID > 0) {
-               // Safe percent capture
                mgr->updateProgress(m_level->m_levelID, m_level->m_normalPercent);
            }
+        }
+    }
+    
+    void onQuit() {
+        PlayLayer::onQuit();
+        
+        if (!m_isPracticeMode) {
+             auto mgr = RandomRouletteManager::getInstance();
+             auto current = mgr->getCurrentLevel();
+             if (current && m_level && m_level->m_levelID == current->id && m_level->m_levelID > 0) {
+                 mgr->updateProgress(m_level->m_levelID, m_level->m_normalPercent);
+             }
         }
     }
 };
