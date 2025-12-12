@@ -1,6 +1,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include "RandomRouletteManager.hpp"
+#include <Geode/loader/Event.hpp>
 
 using namespace geode::prelude;
 
@@ -8,39 +9,37 @@ class $modify(MyPlayLayer, PlayLayer) {
     void levelComplete() {
         PlayLayer::levelComplete();
         
-        // Check if we are playing the roulette level
         auto mgr = RandomRouletteManager::sharedState();
-        int rouletteID = mgr->getCurrentLevelID();
-        
-        if (m_level->m_levelID == rouletteID && rouletteID > 0) {
-            mgr->updateProgress(m_level->m_levelID, 100);
+        if (m_level->m_levelID == mgr->getCurrentLevelID() && m_level->m_levelID > 0) {
             mgr->markLevelCompleted(m_level->m_levelID);
-            
-            Notification::create("Roulette Level Completed!", NotificationIcon::Success)->show();
+            Notification::create("Nivel de Ruleta Completado!", NotificationIcon::Success)->show();
         }
     }
 
-    // Capture specific percentage updates if needed, e.g. on death
-    // Hooks destroy() to catch when leaving the layer or dying and restarting
-    // However, capturing "best run" is tricky on destroy because m_level might be resetting.
-    // Better to hook `playerDestroyed`.
+    void destroyPlayer(PlayerObject* p0, GameObject* p1) {
+        PlayLayer::destroyPlayer(p0, p1);
+
+        // Check if it's the main player dying
+        if (!m_isPracticeMode && p0 == m_player1) {
+           auto mgr = RandomRouletteManager::sharedState();
+           if (m_level->m_levelID == mgr->getCurrentLevelID() && m_level->m_levelID > 0) {
+               // Get current percentage safely
+               // m_level->m_normalPercent is updated continuously
+               mgr->updateProgress(m_level->m_levelID, m_level->m_normalPercent);
+           }
+        }
+    }
     
-    void playerDestroyed(bool p0) {
-        PlayLayer::playerDestroyed(p0);
+    // Also catch quit to menu to save progress
+    void onQuit() {
+        PlayLayer::onQuit();
         
-        auto mgr = RandomRouletteManager::sharedState();
-        int rouletteID = mgr->getCurrentLevelID();
-        
-        if (m_level->m_levelID == rouletteID && rouletteID > 0) {
-            // Get current percentage logic
-             // m_level->m_normalPercent should hold current run percent if we are carefully reading it. 
-             // Actually PlayLayer calculates it based on X pos. 
-             // Simpler approach: check `getCurrentPercent()` if available or `m_level->m_normalPercent`.
-             // Note: getCurrentPercent is helper.
-             
-             // We'll trust m_level->m_normalPercent update which usually happens in update()
-             int p = getCurrentPercentInt();
-             mgr->updateProgress(rouletteID, p);
+        if (!m_isPracticeMode) {
+             auto mgr = RandomRouletteManager::sharedState();
+             // Ensure level pointer is valid before using
+             if (m_level && m_level->m_levelID == mgr->getCurrentLevelID() && m_level->m_levelID > 0) {
+                 mgr->updateProgress(m_level->m_levelID, m_level->m_normalPercent);
+             }
         }
     }
 };

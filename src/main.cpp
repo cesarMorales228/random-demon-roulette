@@ -4,7 +4,6 @@
 using namespace geode::prelude;
 
 $execute {
-    // Initialize manager on load
     RandomRouletteManager::sharedState()->init();
-    log::info("Mod loaded: Random Demon Roulette");
+    log::info("Random Demon Roulette Initialized!");
 }

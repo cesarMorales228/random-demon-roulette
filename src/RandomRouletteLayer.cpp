@@ -4,7 +4,7 @@
 
 RandomRouletteLayer* RandomRouletteLayer::create() {
     auto ret = new RandomRouletteLayer();
-    if (ret && ret->initAnchored(320.f, 240.f)) { // Slightly larger popup
+    if (ret && ret->initAnchored(320.f, 220.f)) {
         ret->autorelease();
         return ret;
     }
@@ -15,57 +15,51 @@ RandomRouletteLayer* RandomRouletteLayer::create() {
 bool RandomRouletteLayer::setup() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     auto mgr = RandomRouletteManager::sharedState();
-    mgr->init(); // Ensure init
+    mgr->init();
 
-    // Title
-    auto title = CCLabelBMFont::create("Random Demon Roulette", "goldFont.fnt");
-    title->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height - 25);
-    title->setScale(0.8f);
-    m_mainLayer->addChild(title);
+    this->setTitle("Random Demon Roulette", "goldFont.fnt");
 
     // Level Name
-    m_levelNameLabel = CCLabelBMFont::create("Unknown", "bigFont.fnt");
-    m_levelNameLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2 + 30);
-    m_levelNameLabel->setScale(0.6f);
-    m_mainLayer->addChild(m_levelNameLabel);
+    m_nameLabel = CCLabelBMFont::create("Loading...", "bigFont.fnt");
+    m_nameLabel->setScale(0.6f);
+    m_nameLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2 + 25);
+    m_mainLayer->addChild(m_nameLabel);
 
     // Difficulty
     m_diffLabel = CCLabelBMFont::create("Difficulty", "chatFont.fnt");
-    m_diffLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2 + 5);
-    m_diffLabel->setColor({255, 200, 0});
+    m_diffLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2);
     m_mainLayer->addChild(m_diffLabel);
 
-    // Percentage
-    m_percentLabel = CCLabelBMFont::create("Best: 0%", "chatFont.fnt");
-    m_percentLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2 - 15);
-    m_mainLayer->addChild(m_percentLabel);
+    // Progress
+    m_progressLabel = CCLabelBMFont::create("Best: 0%", "chatFont.fnt");
+    m_progressLabel->setPosition(m_mainLayer->getContentSize().width / 2, m_mainLayer->getContentSize().height / 2 - 20);
+    m_mainLayer->addChild(m_progressLabel);
 
-    // Buttons Menu
+    // Buttons
     auto menu = CCMenu::create();
     menu->setPosition(0, 0);
     m_mainLayer->addChild(menu);
 
-    // Play Button
+    // Play
     auto playSpr = ButtonSprite::create("Jugar", "goldFont.fnt", "GJ_button_01.png", .8f);
     auto playBtn = CCMenuItemSpriteExtra::create(playSpr, this, menu_selector(RandomRouletteLayer::onPlay));
-    playBtn->setPosition(m_mainLayer->getContentSize().width / 2 - 80, 50);
+    playBtn->setPosition(m_mainLayer->getContentSize().width / 2 - 80, 40);
     menu->addChild(playBtn);
 
-    // Next Button
+    // Next
     auto nextSpr = ButtonSprite::create("Siguiente", "goldFont.fnt", "GJ_button_02.png", .8f);
     auto nextBtn = CCMenuItemSpriteExtra::create(nextSpr, this, menu_selector(RandomRouletteLayer::onNext));
-    nextBtn->setPosition(m_mainLayer->getContentSize().width / 2 + 80, 50);
+    nextBtn->setPosition(m_mainLayer->getContentSize().width / 2 + 80, 40);
     menu->addChild(nextBtn);
 
-    // Reset Button (Small icon)
+    // Reset (Corner)
     auto resetSpr = CCSprite::createWithSpriteFrameName("GJ_resetBtn_001.png");
-    resetSpr->setScale(0.6f);
+    resetSpr->setScale(0.8f);
     auto resetBtn = CCMenuItemSpriteExtra::create(resetSpr, this, menu_selector(RandomRouletteLayer::onReset));
-    resetBtn->setPosition(m_mainLayer->getContentSize().width - 30, m_mainLayer->getContentSize().height - 30);
+    resetBtn->setPosition(m_mainLayer->getContentSize().width - 25, m_mainLayer->getContentSize().height - 25);
     menu->addChild(resetBtn);
 
     updateUI();
-
     return true;
 }
 
@@ -74,41 +68,50 @@ void RandomRouletteLayer::updateUI() {
     m_currentLevelID = mgr->getCurrentLevelID();
 
     if (m_currentLevelID == -1) {
-        m_levelNameLabel->setString("Pulsa Siguiente");
+        m_nameLabel->setString("Pulsa Siguiente");
         m_diffLabel->setString("");
-        m_percentLabel->setString("");
+        m_progressLabel->setString("");
         return;
     }
 
     auto data = mgr->getLevelData(m_currentLevelID);
-    m_levelNameLabel->setString(data.name.c_str());
-    m_diffLabel->setString(data.difficulty.c_str());
-    
-    int best = mgr->getBestProgress(m_currentLevelID);
-    bool completed = mgr->isCompleted(m_currentLevelID);
-    
-    if (completed) {
-        m_percentLabel->setString("Completado!");
-        m_percentLabel->setColor({0, 255, 0});
+    m_nameLabel->setString(data.name.c_str());
+
+    // Difficulty Color
+    ccColor3B diffColor = {255, 255, 255};
+    std::string diffText = "";
+    switch(data.difficulty) {
+        case Difficulty::Easy: diffText = "Easy Demon"; diffColor = {0, 255, 0}; break;
+        case Difficulty::Medium: diffText = "Medium Demon"; diffColor = {255, 255, 0}; break;
+        case Difficulty::Hard: diffText = "Hard Demon"; diffColor = {255, 128, 0}; break;
+        case Difficulty::Extreme: diffText = "Extreme Demon"; diffColor = {255, 0, 0}; break;
+    }
+    m_diffLabel->setString(diffText.c_str());
+    m_diffLabel->setColor(diffColor);
+
+    // Progress
+    if (mgr->isCompleted(m_currentLevelID)) {
+        m_progressLabel->setString("Completado!");
+        m_progressLabel->setColor({0, 255, 0});
     } else {
-        m_percentLabel->setString(fmt::format("Best: {}%", best).c_str());
-        m_percentLabel->setColor({255, 255, 255});
+        int best = mgr->getBestProgress(m_currentLevelID);
+        m_progressLabel->setString(fmt::format("Best: {}%", best).c_str());
+        m_progressLabel->setColor({255, 255, 255});
     }
 }
 
 void RandomRouletteLayer::onPlay(CCObject*) {
     if (m_currentLevelID <= 0) return;
-    
-    // Get Online Level to play
-    GameLevelManager::sharedState()->getOnlineLevel(m_currentLevelID, false);
-    
-    // Create a dummy level to open info immediately if we assume user has it, 
-    // but better to rely on LevelInfoLayer handling it.
+
+    // Use LevelInfoLayer wrapper to handle download
     auto level = GJGameLevel::create();
     level->m_levelID = m_currentLevelID;
     
-    auto levelInfo = LevelInfoLayer::create(level, false);
-    CCDirector::sharedDirector()->getRunningScene()->addChild(levelInfo);
+    // Attempt download in background or just open info layer and let it handle it
+    // GameLevelManager::sharedState()->getOnlineLevel(m_currentLevelID, false);
+
+    auto infoLayer = LevelInfoLayer::create(level, false);
+    CCDirector::sharedDirector()->getRunningScene()->addChild(infoLayer);
     
     this->onClose(nullptr);
 }
@@ -117,21 +120,16 @@ void RandomRouletteLayer::onNext(CCObject*) {
     auto mgr = RandomRouletteManager::sharedState();
     int id = mgr->pickRandomLevel();
     if (id == -1) {
-        FLAlertLayer::create("Info", "Todos los niveles completados! Reinicia la ruleta.", "OK")->show();
+        FLAlertLayer::create("Completado", "¡Has completado todos los niveles!", "OK")->show();
     }
     updateUI();
 }
 
 void RandomRouletteLayer::onReset(CCObject*) {
-    createQuickPopup(
-        "Reiniciar",
-        "¿Estás seguro de querer reiniciar todo el progreso de la ruleta?",
-        "Cancelar", "Si",
-        [this](auto, bool btn2) {
-            if (btn2) {
-                RandomRouletteManager::sharedState()->resetRoulette();
-                updateUI();
-            }
+    createQuickPopup("Reiniciar", "¿Borrar todo el progreso?", "Cancelar", "Borrar", [this](auto, bool btn2){
+        if(btn2) {
+            RandomRouletteManager::sharedState()->resetRoulette();
+            updateUI();
         }
-    );
+    });
 }
