@@ -1,24 +1,23 @@
 cmake_minimum_required(VERSION 3.21)
-project(random_roulette)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(${PROJECT_NAME} SHARED
-    src/main.cpp
-    src/RandomRouletteManager.cpp
-    src/RandomRouletteManager.hpp
-    src/RandomRouletteLayer.cpp
-    src/RandomRouletteLayer.hpp
-    src/MenuLayerHook.cpp
-    src/PlayLayerHook.cpp
-)
+project(random_roulette VERSION 1.0.0)
 
-target_link_libraries(${PROJECT_NAME} geode-sdk)
+# Buscar todos los archivos fuente en src/
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
-setup_geode_mod(
-    MOD_ID dainamondev.randomroulette
-    VERSION 1.0.0
-    NAME "Random Demon Roulette"
-    DESCRIPTION "Roulette that picks random demons, tracks progress, and avoids repeats."
-    AUTHORS "dainamondev"
-    EXTERNALS
-        geode.geode:>=4.0.0
-)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
+# Verificar que GEODE_SDK exista
+if (NOT DEFINED ENV{GEODE_SDK})
+    message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
+else()
+    message(STATUS "Found Geode: $ENV{GEODE_SDK}")
+endif()
+
+# Agregar el SDK antes de setup_geode_mod
+add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
+
+# Ahora sí llamar a setup_geode_mod
+setup_geode_mod(${PROJECT_NAME})
