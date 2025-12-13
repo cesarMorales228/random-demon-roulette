@@ -1,9 +1,34 @@
-#include "RandomRouletteLayer.hpp"
-#include "RandomRouletteManager.hpp"
+#include "LevelRecommenderLayer.hpp"
 
-RandomRouletteLayer* RandomRouletteLayer::create() {
-    auto ret = new RandomRouletteLayer();
-    if (ret && ret->initAnchored(300.f, 220.f)) {
+const std::vector<RecommendedLevel>& LevelRecommenderLayer::getRecommendedLevels() {
+    static std::vector<RecommendedLevel> levels = {
+        {10565740, "Bloodbath", "Riot", 10},
+        {42584142, "Tartarus", "Riot", 10},
+        {61079355, "Acu", "neigefeu", 10},
+        {3979721, "Cataclysm", "Ggb0y", 10},
+        {77151846, "Slaughterhouse", "Icedcave", 10},
+        {56165243, "Zodiac", "Xander556", 10},
+        {61765103, "The Golden", "BoBoBoBoBoBo", 10},
+        {10651760, "Sonic Wave", "Cyclic", 10},
+        {39669528, "Kenos", "Rustam", 10},
+        {81014878, "Acheron", "Ryamu", 10},
+        {8660411, "Platinum Adventure", "Jerry", 6},
+        {122607, "Demon Mixed", "RealOggY", 4},
+        {3307584, "The Lightning Road", "Timeless", 5},
+        {3633830, "The Nightmare", "Jax", 4},
+        {7828189, "Speed Racer", "ZenthicAlpha", 5},
+        {97486, "Theory of Everything 2", "RobTop", 3},
+        {191199, "RadioActive", "MrCheeseTigrr", 4},
+        {422209, "Impulse", "MrCheeseTigrr", 4},
+        {192994, "Crescendo", "MasK463", 5},
+        {1111, "xStep v2", "Neptune", 4}
+    };
+    return levels;
+}
+
+LevelRecommenderLayer* LevelRecommenderLayer::create() {
+    auto ret = new LevelRecommenderLayer();
+    if (ret && ret->initAnchored(420.f, 280.f)) {
         ret->autorelease();
         return ret;
     }
@@ -11,124 +36,72 @@ RandomRouletteLayer* RandomRouletteLayer::create() {
     return nullptr;
 }
 
-bool RandomRouletteLayer::setup() {
-    this->setTitle("Random Demon Roulette");
+bool LevelRecommenderLayer::setup() {
+    this->setTitle("Level Recommender");
     
-    RandomRouletteManager::getInstance()->init();
+    // Create scroll layer
+    auto scrollLayer = ScrollLayer::create({400.f, 200.f});
+    scrollLayer->setPosition(m_size.width / 2 - 200.f, 40.f);
+    m_mainLayer->addChild(scrollLayer);
     
-    // UI Elements
-    m_nameLabel = CCLabelBMFont::create("...", "bigFont.fnt");
-    m_nameLabel->setScale(0.6f);
-    m_nameLabel->setPosition(m_size.width / 2, m_size.height / 2 + 25);
-    m_mainLayer->addChild(m_nameLabel);
+    // Create cells for each level
+    float yOffset = 0;
+    auto& levels = getRecommendedLevels();
     
-    m_diffLabel = CCLabelBMFont::create("Difficulty", "chatFont.fnt");
-    m_diffLabel->setPosition(m_size.width / 2, m_size.height / 2);
-    m_mainLayer->addChild(m_diffLabel);
+    auto contentMenu = CCMenu::create();
+    contentMenu->setPosition(0, 0);
     
-    m_progressLabel = CCLabelBMFont::create("Progress: 0%", "chatFont.fnt");
-    m_progressLabel->setPosition(m_size.width / 2, m_size.height / 2 - 20);
-    m_mainLayer->addChild(m_progressLabel);
+    for (const auto& level : levels) {
+        createLevelCell(level, yOffset, contentMenu);
+        yOffset -= 30.f;
+    }
     
-    // Buttons
-    auto menu = CCMenu::create();
-    menu->setPosition(0, 0);
-    m_mainLayer->addChild(menu);
-    
-    auto playSpr = ButtonSprite::create("Play", "goldFont.fnt", "GJ_button_01.png", .8f);
-    auto playBtn = CCMenuItemSpriteExtra::create(playSpr, this, menu_selector(RandomRouletteLayer::onPlay));
-    playBtn->setPosition(m_size.width / 2 - 80, 40);
-    menu->addChild(playBtn);
-    
-    auto nextSpr = ButtonSprite::create("Next", "goldFont.fnt", "GJ_button_02.png", .8f);
-    auto nextBtn = CCMenuItemSpriteExtra::create(nextSpr, this, menu_selector(RandomRouletteLayer::onNext));
-    nextBtn->setPosition(m_size.width / 2 + 80, 40);
-    menu->addChild(nextBtn);
-    
-    auto resetSpr = CCSprite::createWithSpriteFrameName("GJ_resetBtn_001.png");
-    resetSpr->setScale(0.8f);
-    auto resetBtn = CCMenuItemSpriteExtra::create(resetSpr, this, menu_selector(RandomRouletteLayer::onReset));
-    resetBtn->setPosition(m_size.width - 25, m_size.height - 25);
-    menu->addChild(resetBtn);
-    
-    updateUI();
+    scrollLayer->m_contentLayer->setContentSize({400.f, std::abs(yOffset) + 30.f});
+    scrollLayer->m_contentLayer->addChild(contentMenu);
+    scrollLayer->moveToTop();
     
     return true;
 }
 
-void RandomRouletteLayer::updateUI() {
-    auto mgr = RandomRouletteManager::getInstance();
-    auto level = mgr->getCurrentLevel();
+void LevelRecommenderLayer::createLevelCell(RecommendedLevel level, float yPos, CCMenu* menu) {
+    // Background
+    auto bg = CCLayerColor::create({0, 0, 0, 100}, 390.f, 25.f);
+    bg->setPosition(5, yPos);
+    menu->addChild(bg, -1);
     
-    if (!level) {
-        m_nameLabel->setString("Click Next");
-        m_diffLabel->setString("");
-        m_progressLabel->setString("");
-        return;
-    }
+    // Name label
+    auto nameLabel = CCLabelBMFont::create(level.name.c_str(), "bigFont.fnt");
+    nameLabel->setScale(0.4f);
+    nameLabel->setAnchorPoint({0, 0.5f});
+    nameLabel->setPosition(15, yPos + 12.5f);
+    menu->addChild(nameLabel, 1);
     
-    m_nameLabel->setString(level->name.c_str());
+    // Creator label
+    auto creatorLabel = CCLabelBMFont::create(fmt::format("by {}", level.creator).c_str(), "goldFont.fnt");
+    creatorLabel->setScale(0.3f);
+    creatorLabel->setAnchorPoint({0, 0.5f});
+    creatorLabel->setPosition(200, yPos + 12.5f);
+    menu->addChild(creatorLabel, 1);
     
-    ccColor3B col = {255, 255, 255};
-    std::string txt = "";
-    
-    switch(level->difficulty) {
-        case DemonLevel::Difficulty::Easy: 
-            txt = "Easy Demon"; 
-            col = {0, 255, 0}; 
-            break;
-        case DemonLevel::Difficulty::Medium: 
-            txt = "Medium Demon"; 
-            col = {255, 255, 0}; 
-            break;
-        case DemonLevel::Difficulty::Hard: 
-            txt = "Hard Demon"; 
-            col = {255, 128, 0}; 
-            break;
-        case DemonLevel::Difficulty::Extreme: 
-            txt = "Extreme Demon"; 
-            col = {255, 0, 0}; 
-            break;
-    }
-    
-    m_diffLabel->setString(txt.c_str());
-    m_diffLabel->setColor(col);
-    
-    if (mgr->isCompleted(level->id)) {
-        m_progressLabel->setString("Completed!");
-        m_progressLabel->setColor({0, 255, 0});
-    } else {
-        int p = mgr->getBestProgress(level->id);
-        m_progressLabel->setString(fmt::format("Progress: {}%", p).c_str());
-        m_progressLabel->setColor({255, 255, 255});
-    }
+    // Play button
+    auto playSpr = ButtonSprite::create("Play", "goldFont.fnt", "GJ_button_01.png", 0.6f);
+    auto playBtn = CCMenuItemSpriteExtra::create(
+        playSpr,
+        this,
+        menu_selector(LevelRecommenderLayer::onPlayLevel)
+    );
+    playBtn->setTag(level.id);
+    playBtn->setPosition(350, yPos + 12.5f);
+    menu->addChild(playBtn);
 }
 
-void RandomRouletteLayer::onPlay(CCObject*) {
-    auto level = RandomRouletteManager::getInstance()->getCurrentLevel();
-    if (!level) return;
+void LevelRecommenderLayer::onPlayLevel(CCObject* sender) {
+    auto btn = static_cast<CCMenuItemSpriteExtra*>(sender);
+    int levelID = btn->getTag();
     
-    // Open level browser directly with search by ID
-    auto searchObj = GJSearchObject::create(SearchType::Type19, std::to_string(level->id));
+    auto searchObj = GJSearchObject::create(SearchType::Type19, std::to_string(levelID));
     auto browser = LevelBrowserLayer::scene(searchObj);
     CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, browser));
     
     this->onClose(nullptr);
-}
-
-void RandomRouletteLayer::onNext(CCObject*) {
-    int id = RandomRouletteManager::getInstance()->pickRandomLevel();
-    if (id == -1) {
-        FLAlertLayer::create("Info", "All demons completed!", "OK")->show();
-    }
-    updateUI();
-}
-
-void RandomRouletteLayer::onReset(CCObject*) {
-    createQuickPopup("Reset", "Are you sure?", "Cancel", "Reset", [this](auto, bool res){
-        if (res) {
-            RandomRouletteManager::getInstance()->resetRoulette();
-            updateUI();
-        }
-    });
 }
