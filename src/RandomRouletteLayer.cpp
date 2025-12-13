@@ -108,36 +108,12 @@ void RandomRouletteLayer::onPlay(CCObject*) {
     auto level = RandomRouletteManager::getInstance()->getCurrentLevel();
     if (!level) return;
     
-    // Download level from server
-    auto glm = GameLevelManager::sharedState();
-    glm->m_levelManagerDelegate = this;
-    glm->getOnlineLevel(level->id, false);
-    
-    Notification::create("Loading level...", NotificationIcon::Loading)->show();
-    this->retain();  // Keep layer alive during async load
-}
-
-void RandomRouletteLayer::loadLevelsFinished(cocos2d::CCArray* levels, const char* key) {
-    this->release();
-    
-    if (!levels || levels->count() == 0) {
-        FLAlertLayer::create("Error", "Level not found on server", "OK")->show();
-        return;
-    }
-    
-    auto gjLevel = static_cast<GJGameLevel*>(levels->objectAtIndex(0));
-    
-    // Open the level in PlayLayer
-    auto searchObj = GJSearchObject::create(SearchType::Type19, std::to_string(gjLevel->m_levelID));
+    // Open level browser directly with search by ID
+    auto searchObj = GJSearchObject::create(SearchType::Type19, std::to_string(level->id));
     auto browser = LevelBrowserLayer::scene(searchObj);
     CCDirector::sharedDirector()->replaceScene(CCTransitionFade::create(0.5f, browser));
     
     this->onClose(nullptr);
-}
-
-void RandomRouletteLayer::loadLevelsFailed(const char* key) {
-    this->release();
-    FLAlertLayer::create("Error", "Failed to download level", "OK")->show();
 }
 
 void RandomRouletteLayer::onNext(CCObject*) {
