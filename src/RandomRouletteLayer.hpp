@@ -3,7 +3,12 @@
 
 using namespace geode::prelude;
 
-struct RecommendedLevel;
+struct RecommendedLevel {
+    int id;
+    std::string name;
+    std::string creator;
+    int difficulty;
+};
 
 class RandomRouletteLayer : public Popup<> {
 protected:
