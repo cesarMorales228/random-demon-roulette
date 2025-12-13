@@ -1,6 +1,13 @@
-#include "LevelRecommenderLayer.hpp"
+#include "RandomRouletteLayer.hpp"
 
-const std::vector<RecommendedLevel>& LevelRecommenderLayer::getRecommendedLevels() {
+struct RecommendedLevel {
+    int id;
+    std::string name;
+    std::string creator;
+    int difficulty;
+};
+
+const std::vector<RecommendedLevel>& getRecommendedLevels() {
     static std::vector<RecommendedLevel> levels = {
         {10565740, "Bloodbath", "Riot", 10},
         {42584142, "Tartarus", "Riot", 10},
@@ -26,8 +33,8 @@ const std::vector<RecommendedLevel>& LevelRecommenderLayer::getRecommendedLevels
     return levels;
 }
 
-LevelRecommenderLayer* LevelRecommenderLayer::create() {
-    auto ret = new LevelRecommenderLayer();
+RandomRouletteLayer* RandomRouletteLayer::create() {
+    auto ret = new RandomRouletteLayer();
     if (ret && ret->initAnchored(420.f, 280.f)) {
         ret->autorelease();
         return ret;
@@ -36,7 +43,7 @@ LevelRecommenderLayer* LevelRecommenderLayer::create() {
     return nullptr;
 }
 
-bool LevelRecommenderLayer::setup() {
+bool RandomRouletteLayer::setup() {
     this->setTitle("Level Recommender");
     
     // Create scroll layer
@@ -63,7 +70,7 @@ bool LevelRecommenderLayer::setup() {
     return true;
 }
 
-void LevelRecommenderLayer::createLevelCell(RecommendedLevel level, float yPos, CCMenu* menu) {
+void RandomRouletteLayer::createLevelCell(RecommendedLevel level, float yPos, CCMenu* menu) {
     // Background
     auto bg = CCLayerColor::create({0, 0, 0, 100}, 390.f, 25.f);
     bg->setPosition(5, yPos);
@@ -88,14 +95,14 @@ void LevelRecommenderLayer::createLevelCell(RecommendedLevel level, float yPos, 
     auto playBtn = CCMenuItemSpriteExtra::create(
         playSpr,
         this,
-        menu_selector(LevelRecommenderLayer::onPlayLevel)
+        menu_selector(RandomRouletteLayer::onPlayLevel)
     );
     playBtn->setTag(level.id);
     playBtn->setPosition(350, yPos + 12.5f);
     menu->addChild(playBtn);
 }
 
-void LevelRecommenderLayer::onPlayLevel(CCObject* sender) {
+void RandomRouletteLayer::onPlayLevel(CCObject* sender) {
     auto btn = static_cast<CCMenuItemSpriteExtra*>(sender);
     int levelID = btn->getTag();
     
