@@ -3,19 +3,14 @@
 
 using namespace geode::prelude;
 
+struct RecommendedLevel;
+
 class RandomRouletteLayer : public Popup<> {
 protected:
     bool setup() override;
     
-    CCLabelBMFont* m_nameLabel;
-    CCLabelBMFont* m_diffLabel;
-    CCLabelBMFont* m_progressLabel;
-    
-    void onPlay(CCObject*);
-    void onNext(CCObject*);
-    void onReset(CCObject*);
-    
-    void updateUI();
+    void createLevelCell(RecommendedLevel level, float yPos, CCMenu* menu);
+    void onPlayLevel(CCObject*);
     
 public:
     static RandomRouletteLayer* create();
