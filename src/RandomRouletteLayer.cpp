@@ -1,12 +1,5 @@
 #include "RandomRouletteLayer.hpp"
 
-struct RecommendedLevel {
-    int id;
-    std::string name;
-    std::string creator;
-    int difficulty;
-};
-
 const std::vector<RecommendedLevel>& getRecommendedLevels() {
     static std::vector<RecommendedLevel> levels = {
         {10565740, "Bloodbath", "Riot", 10},
