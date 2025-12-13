@@ -3,7 +3,7 @@
 
 using namespace geode::prelude;
 
-class RandomRouletteLayer : public Popup<>, public LevelManagerDelegate {
+class RandomRouletteLayer : public Popup<> {
 protected:
     bool setup() override;
     
@@ -16,12 +16,6 @@ protected:
     void onReset(CCObject*);
     
     void updateUI();
-    
-    // LevelManagerDelegate callbacks
-    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key) override;
-    void loadLevelsFailed(const char* key) override;
-    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override {}
-    void loadLevelsFailed(const char* key, int) override {}
     
 public:
     static RandomRouletteLayer* create();
